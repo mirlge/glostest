@@ -101,13 +101,12 @@ func (m Write) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "enter":
 			if m.input.Value() == m.glossary[m.glossIdx].Definition {
 				m.correctAmount++
-				if m.glossIdx < len(m.glossary)-1 {
-					m.correct = true
-				} else {
-					m.correct = false
-				}
+				m.correct = true
 			} else {
 				m.correct = false
+			}
+			if m.firstGloss {
+				m.firstGloss = false
 			}
 			m.glossary[m.glossIdx] = m.glossary[len(m.glossary)-1]
 			m.glossary = m.glossary[:len(m.glossary)-1]
@@ -132,12 +131,14 @@ func (m Write) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m Write) View() string {
 	correctMsg := ""
-	if !m.firstGloss && !m.correct {
-		correctMsg = "Incorrect"
-	} else {
-		correctMsg = "Correct! Good job!"
+	if !m.firstGloss {
+		if !m.correct {
+			correctMsg = "Incorrect"
+		} else if m.correct {
+			correctMsg = "Correct! Good job!"
+		}
 	}
-	return lipgloss.JoinVertical(lipgloss.Center, correctMsg, fmt.Sprintf("What does %s mean?", m.glossary[m.glossIdx].Term), m.input.View())
+	return lipgloss.JoinVertical(lipgloss.Left, correctMsg, fmt.Sprintf("What does '%s' mean?", m.glossary[m.glossIdx].Term), m.input.View())
 }
 
 /// MenuItem is an item of the Menu
