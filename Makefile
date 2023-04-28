@@ -1,10 +1,10 @@
-BINARY_NAME=glossary_test
+BINARY_NAME=glostest
 
 build:
-	go build -o ${BINARY_NAME} cmd/glossary_test/main.go
+	go build -o out/${BINARY_NAME} cmd/glostest/main.go
 
 run:
-	go run cmd/glossary_test/main.go
+	go run cmd/glostest/main.go
 
 tidy:
 	go mod tidy
