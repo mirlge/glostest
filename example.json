@@ -1,0 +1,26 @@
+[
+	{
+		"term": "cool",
+		"definition": "cold"
+	},
+	{
+		"term": "one",
+		"definition": "1"
+	},
+	{
+		"term": "suspicious",
+		"definition": "sus"
+	},
+	{
+		"term": "sus",
+		"definition": "suspicious"
+	},
+	{
+		"term": "test",
+		"definition": "test"
+	},
+	{
+		"term": "cold",
+		"definition": "cool"
+	}
+]
