@@ -176,27 +176,10 @@ func NewMultipleChoice(glossary []Gloss, width, height int) MultipleChoice {
 func (m *MultipleChoice) updateGlossary(glossIdx int) {
 	updatedList := list.New([]list.Item{}, list.NewDefaultDelegate(), m.width, m.height)
 	updatedList.Title = "Multiple Choice"
-	maxItems := 5 //len(m.glossary)
-	if maxItems > 5 {
-		maxItems = 5
-	}
 	items := []list.Item{}
-	for i := 0; i < maxItems; i++ {
+	for i := 0; i < 5; i++ {
 		items = append(items, m.glossary[glossIdx])
-		//for items[i] == m.glossary[glossIdx] {
-			item := m.fullGlossary[rand.Intn(len(m.fullGlossary))]
-			//alreadyAdded := false
-			//for itemsIdx, itemsValue := range(items) {
-				//if i != itemsIdx && item.Definition == itemsValue.(Gloss).Definition {
-					//alreadyAdded = true
-					//break
-				//}
-			//}
-			//if alreadyAdded {
-				//continue
-			//}
-			items[i] = item
-		//}
+		items[i] = m.fullGlossary[rand.Intn(len(m.fullGlossary))]
 	}
 
 	alreadyAdded := false
