@@ -24,6 +24,10 @@ func (g Gloss) Title() string {
 	return g.Definition
 }
 
+func (g Gloss) Description() string {
+	return ""
+}
+
 /// Results is the view of the results
 type Results struct {
 	correct int
@@ -135,13 +139,135 @@ func (m Write) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m Write) View() string {
 	correctMsg := ""
 	if !m.firstGloss {
-		if !m.correct {
-			correctMsg = "Incorrect"
-		} else if m.correct {
+		if m.correct {
 			correctMsg = "Correct! Good job!"
+		} else {
+			correctMsg = "Incorrect"
 		}
 	}
 	return lipgloss.JoinVertical(lipgloss.Left, correctMsg, "", fmt.Sprintf("What does '%s' mean?", m.glossary[m.glossIdx].Term), "", m.input.View())
+}
+
+type MultipleChoice struct {
+	list          list.Model
+	fullGlossary  []Gloss
+	glossary      []Gloss
+	glossIdx      int
+	firstGloss    bool
+	correctAmount int
+	correct       bool
+	width         int
+	height        int
+	err           error
+}
+
+func NewMultipleChoice(glossary []Gloss, width, height int) MultipleChoice {
+	m := MultipleChoice{
+		fullGlossary: glossary,
+		glossary:     glossary,
+		firstGloss:   true,
+		width:        width,
+		height:       height,
+	}
+	m.updateGlossary(rand.Intn(len(m.glossary)))
+	return m
+}
+
+func (m *MultipleChoice) updateGlossary(glossIdx int) {
+	updatedList := list.New([]list.Item{}, list.NewDefaultDelegate(), m.width, m.height)
+	updatedList.Title = "Multiple Choice"
+	maxItems := 5 //len(m.glossary)
+	if maxItems > 5 {
+		maxItems = 5
+	}
+	items := []list.Item{}
+	for i := 0; i < maxItems; i++ {
+		items = append(items, m.glossary[glossIdx])
+		//for items[i] == m.glossary[glossIdx] {
+			item := m.fullGlossary[rand.Intn(len(m.fullGlossary))]
+			//alreadyAdded := false
+			//for itemsIdx, itemsValue := range(items) {
+				//if i != itemsIdx && item.Definition == itemsValue.(Gloss).Definition {
+					//alreadyAdded = true
+					//break
+				//}
+			//}
+			//if alreadyAdded {
+				//continue
+			//}
+			items[i] = item
+		//}
+	}
+
+	alreadyAdded := false
+	for _, item := range(items) {
+		if item.(Gloss).Definition == m.glossary[glossIdx].Definition {
+			alreadyAdded = true
+			break
+		}
+	}
+	if !alreadyAdded {
+		items[rand.Intn(len(items))] = m.glossary[glossIdx]
+	}
+
+	m.glossIdx = glossIdx
+	updatedList.SetItems(items)
+	m.list = updatedList
+}
+
+func (m MultipleChoice) Init() tea.Cmd {
+	return nil
+}
+
+func (m MultipleChoice) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	var cmd tea.Cmd
+
+	switch msg := msg.(type) {
+
+	case tea.WindowSizeMsg:
+		m.width = msg.Width
+		m.height = msg.Height - 2
+		m.updateGlossary(m.glossIdx)
+
+	case tea.KeyMsg:
+		switch msg.String() {
+
+		case "enter":
+			if m.glossary[m.glossIdx].Definition == m.list.SelectedItem().(Gloss).Definition {
+				m.correct = true
+				m.correctAmount++
+			} else {
+				m.correct = false
+			}
+			m.glossary[m.glossIdx] = m.glossary[len(m.glossary)-1]
+			m.glossary = m.glossary[:len(m.glossary)-1]
+
+			if len(m.glossary) == 0 {
+				r := NewResults(m.correctAmount, len(m.fullGlossary))
+				return r.Update(nil)
+			}
+			m.updateGlossary(rand.Intn(len(m.glossary)))
+			if m.firstGloss {
+				m.firstGloss = false
+			}
+			return m, cmd
+		}
+	}
+
+	m.list, cmd = m.list.Update(msg)
+	return m, cmd
+}
+
+func (m MultipleChoice) View() string {
+	correctMsg := ""
+	if !m.firstGloss {
+		if m.correct {
+			correctMsg = "Correct! Good job!"
+		} else {
+			correctMsg = "Incorrect"
+		}
+	}
+	return lipgloss.JoinVertical(lipgloss.Left, correctMsg, "What does '"+m.glossary[m.glossIdx].Term+"' mean?", m.list.View())
 }
 
 /// MenuItem is an item of the Menu
@@ -166,6 +292,8 @@ func (i MenuItem) Description() string {
 type Menu struct {
 	glossary []Gloss
 	loaded   bool
+	height   int
+	width    int
 	list     list.Model
 	err      error
 }
@@ -174,6 +302,8 @@ type Menu struct {
 func NewMenu(glossary []Gloss) Menu {
 	return Menu{
 		glossary: glossary,
+		width: 0,
+		height: 0,
 	}
 }
 
@@ -207,6 +337,8 @@ func (m Menu) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case tea.WindowSizeMsg:
 		if !m.loaded {
+			m.width = msg.Width
+			m.height = msg.Height
 			m.initList(msg.Width, msg.Height)
 			m.loaded = true
 		}
@@ -221,6 +353,10 @@ func (m Menu) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case 0:
 				w := NewWrite(m.glossary)
 				return w.Update(nil)
+
+			case 1:
+				mc := NewMultipleChoice(m.glossary, m.width, m.height - 2)
+				return mc.Update(nil)
 			}
 		}
 
