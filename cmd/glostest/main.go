@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	tui "glostest/internal/tui"
-	"io/ioutil"
 	"log"
 	"os"
 
@@ -11,7 +10,7 @@ import (
 )
 
 func main() {
-	content, err := ioutil.ReadFile(os.Args[1])
+	content, err := os.ReadFile(os.Args[1])
 	if err != nil {
 		log.Fatal("Error when opening file: ", err)
 		os.Exit(1)
