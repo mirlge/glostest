@@ -10,22 +10,29 @@ import (
 )
 
 func main() {
-	content, err := os.ReadFile(os.Args[1])
-	if err != nil {
-		log.Fatal("Error when opening file: ", err)
-		os.Exit(1)
-	}
 	var glossary []tui.Gloss
-	err = json.Unmarshal(content, &glossary)
-	if err != nil {
-		log.Fatal("Error during JSON parsing: ", err)
-		os.Exit(1)
+	for i, file := range os.Args {
+		if i == 0 {
+			continue
+		}
+		content, err := os.ReadFile(file)
+		if err != nil {
+			log.Fatal("Error when opening file ${file}: ", err)
+			os.Exit(1)
+		}
+		var glossarySlice []tui.Gloss
+		err = json.Unmarshal(content, &glossarySlice)
+		if err != nil {
+			log.Fatal("Error during JSON parsing: ", err)
+			os.Exit(1)
+		}
+		glossary = append(glossary, glossarySlice...)
 	}
 
 	m := tui.NewMenu(glossary)
 	p := tea.NewProgram(m, tea.WithAltScreen())
 
-	_, err = p.Run()
+	_, err := p.Run()
 	if err != nil {
 		log.Fatal(err)
 	}
